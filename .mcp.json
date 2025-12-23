@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fleetflow": {
+      "type": "stdio",
+      "command": "fleetflow-mcp"
+    }
+  }
+}

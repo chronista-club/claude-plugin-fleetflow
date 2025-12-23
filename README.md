@@ -1,0 +1,96 @@
+# FleetFlow Claude Code Plugin
+
+Claude Code plugin for FleetFlow container orchestration.
+
+## Features
+
+- **Project Inspection** - Analyze FleetFlow projects and view service/stage configurations
+- **Container Management** - Start, stop, restart containers for your project
+- **Build Support** - Build Docker images from Dockerfiles
+- **Log Viewing** - View container logs directly from Claude Code
+- **Configuration Validation** - Validate flow.kdl syntax and structure
+
+## Installation
+
+```bash
+# Install the MCP server binary from the main FleetFlow repo
+cargo install --git https://github.com/chronista-club/fleetflow fleetflow-mcp
+
+# Copy plugin config to Claude Code
+cp .mcp.json ~/.claude/
+```
+
+## MCP Tools
+
+| Tool | Description | Required Args |
+|------|-------------|---------------|
+| `fleetflow_inspect_project` | Analyze flow.kdl and show project structure | - |
+| `fleetflow_ps` | Show container status for project | - |
+| `fleetflow_up` | Start containers for a stage | `stage` |
+| `fleetflow_down` | Stop containers for a stage | `stage` |
+| `fleetflow_logs` | View container logs | `stage` |
+| `fleetflow_restart` | Restart a specific service | `stage`, `service` |
+| `fleetflow_validate` | Validate configuration files | - |
+| `fleetflow_build` | Build Docker images | `stage` |
+
+## Usage Examples
+
+Once installed, you can use FleetFlow tools directly in Claude Code:
+
+```
+User: Show me the FleetFlow project structure
+Claude: [Uses fleetflow_inspect_project]
+
+User: Validate the configuration
+Claude: [Uses fleetflow_validate]
+
+User: Start the local environment
+Claude: [Uses fleetflow_up with stage="local"]
+
+User: Check what's running
+Claude: [Uses fleetflow_ps]
+
+User: Show me the logs for the web service
+Claude: [Uses fleetflow_logs with stage="local", service="web"]
+
+User: Restart the api service
+Claude: [Uses fleetflow_restart with stage="local", service="api"]
+
+User: Build images for local
+Claude: [Uses fleetflow_build with stage="local"]
+
+User: Stop everything
+Claude: [Uses fleetflow_down with stage="local", remove=true]
+```
+
+## Requirements
+
+- Docker or OrbStack running
+- FleetFlow project with `flow.kdl` in the current directory or parent directories
+- `fleetflow-mcp` binary in your PATH
+
+## Architecture
+
+This plugin is a lightweight configuration package. The MCP server binary (`fleetflow-mcp`) is maintained in the main FleetFlow repository:
+
+```
+fleetflow/                          # Main repo
+├── crates/
+│   └── fleetflow-mcp/              # MCP server binary
+│       ├── src/lib.rs              # Server implementation
+│       └── src/main.rs             # Entry point
+
+claude-plugin-fleetflow/            # This plugin repo
+├── .claude-plugin/plugin.json      # Plugin metadata
+├── .mcp.json                       # MCP server configuration
+└── README.md
+```
+
+## Related Projects
+
+- [FleetFlow](https://github.com/chronista-club/fleetflow) - Main container orchestration CLI
+- [Creo Memories](https://github.com/chronista-club/claude-plugin-creo-memories) - Persistent memory plugin
+
+## License
+
+MIT OR Apache-2.0
