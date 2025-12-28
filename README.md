@@ -2,6 +2,8 @@
 
 Claude Code plugin for FleetFlow container orchestration.
 
+**環境構築は、対話になった。伝えれば、動く。**
+
 ## Features
 
 - **Project Inspection** - Analyze FleetFlow projects and view service/stage configurations
@@ -9,12 +11,13 @@ Claude Code plugin for FleetFlow container orchestration.
 - **Build Support** - Build Docker images from Dockerfiles
 - **Log Viewing** - View container logs directly from Claude Code
 - **Configuration Validation** - Validate flow.kdl syntax and structure
+- **Cloud Infrastructure** - Manage cloud servers (Sakura Cloud) and DNS (Cloudflare)
 
 ## Installation
 
 ```bash
-# Install the MCP server binary from the main FleetFlow repo
-cargo install --git https://github.com/chronista-club/fleetflow fleetflow-mcp
+# Install FleetFlow CLI (includes MCP server)
+cargo install --git https://github.com/chronista-club/fleetflow fleetflow
 
 # Copy plugin config to Claude Code
 cp .mcp.json ~/.claude/
@@ -28,10 +31,12 @@ cp .mcp.json ~/.claude/
 | `fleetflow_ps` | Show container status for project | - |
 | `fleetflow_up` | Start containers for a stage | `stage` |
 | `fleetflow_down` | Stop containers for a stage | `stage` |
+| `fleetflow_deploy` | Deploy stage (CI/CD: stop → pull → start) | `stage` |
 | `fleetflow_logs` | View container logs | `stage` |
 | `fleetflow_restart` | Restart a specific service | `stage`, `service` |
 | `fleetflow_validate` | Validate configuration files | - |
 | `fleetflow_build` | Build Docker images | `stage` |
+| `fleetflow_setup` | Setup stage environment (idempotent) | `stage` |
 
 ## Usage Examples
 
@@ -59,26 +64,38 @@ Claude: [Uses fleetflow_restart with stage="local", service="api"]
 User: Build images for local
 Claude: [Uses fleetflow_build with stage="local"]
 
+User: Deploy to production
+Claude: [Uses fleetflow_deploy with stage="prod"]
+
 User: Stop everything
 Claude: [Uses fleetflow_down with stage="local", remove=true]
 ```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `FLEET_STAGE` | Default stage name (local/dev/stg/prod) |
+| `FLEETFLOW_CONFIG_PATH` | Direct path to config file |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token (for DNS) |
+| `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID |
+| `CLOUDFLARE_DOMAIN` | Managed domain |
 
 ## Requirements
 
 - Docker or OrbStack running
 - FleetFlow project with `flow.kdl` in the current directory or parent directories
-- `fleetflow-mcp` binary in your PATH
+- `flow` binary in your PATH
 
 ## Architecture
 
-This plugin is a lightweight configuration package. The MCP server binary (`fleetflow-mcp`) is maintained in the main FleetFlow repository:
+This plugin is a lightweight configuration package. The MCP server is built into the main FleetFlow CLI:
 
 ```
 fleetflow/                          # Main repo
 ├── crates/
-│   └── fleetflow-mcp/              # MCP server binary
-│       ├── src/lib.rs              # Server implementation
-│       └── src/main.rs             # Entry point
+│   ├── fleetflow/                  # CLI with MCP server
+│   └── fleetflow-mcp/              # MCP server library
 
 claude-plugin-fleetflow/            # This plugin repo
 ├── .claude-plugin/plugin.json      # Plugin metadata
