@@ -3,8 +3,8 @@
   "description": "Container orchestration MCP server - manage Docker containers with KDL configuration",
   "version": "0.4.2",
   "author": {
-    "name": "Chronista Club",
-    "url": "https://github.com/chronista-club"
+    "name": "Mako",
+    "email": "mito@chronista.club"
   },
   "repository": "https://github.com/chronista-club/claude-plugin-fleetflow",
   "keywords": [

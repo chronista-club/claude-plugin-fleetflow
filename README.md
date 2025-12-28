@@ -64,8 +64,8 @@ Claude: [Uses fleetflow_restart with stage="local", service="api"]
 User: Build images for local
 Claude: [Uses fleetflow_build with stage="local"]
 
-User: Deploy to production
-Claude: [Uses fleetflow_deploy with stage="prod"]
+User: Deploy to live
+Claude: [Uses fleetflow_deploy with stage="live"]
 
 User: Stop everything
 Claude: [Uses fleetflow_down with stage="local", remove=true]
@@ -75,7 +75,7 @@ Claude: [Uses fleetflow_down with stage="local", remove=true]
 
 | Variable | Description |
 |----------|-------------|
-| `FLEET_STAGE` | Default stage name (local/dev/stg/prod) |
+| `FLEET_STAGE` | Default stage name (local/dev/pre/live) |
 | `FLEETFLOW_CONFIG_PATH` | Direct path to config file |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API token (for DNS) |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID |
