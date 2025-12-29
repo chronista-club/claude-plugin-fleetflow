@@ -85,7 +85,7 @@ Claude: [Uses fleetflow_down with stage="local", remove=true]
 
 - Docker or OrbStack running
 - FleetFlow project with `flow.kdl` in the current directory or parent directories
-- `flow` binary in your PATH
+- `fleet` binary in your PATH
 
 ## Architecture
 
