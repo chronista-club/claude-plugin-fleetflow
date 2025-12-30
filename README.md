@@ -35,8 +35,10 @@ cp .mcp.json ~/.claude/
 | `fleetflow_logs` | View container logs | `stage` |
 | `fleetflow_restart` | Restart a specific service | `stage`, `service` |
 | `fleetflow_validate` | Validate configuration files | - |
+| `fleetflow_validate_secrets` | Validate 1Password secret references | - |
 | `fleetflow_build` | Build Docker images | `stage` |
 | `fleetflow_setup` | Setup stage environment (idempotent) | `stage` |
+| `fleetflow_env` | Show environment variables (masked) | `stage` |
 
 ## Usage Examples
 
@@ -69,6 +71,12 @@ Claude: [Uses fleetflow_deploy with stage="live"]
 
 User: Stop everything
 Claude: [Uses fleetflow_down with stage="local", remove=true]
+
+User: Show me the environment variables for local stage
+Claude: [Uses fleetflow_env with stage="local"]
+
+User: Validate the 1Password secret references
+Claude: [Uses fleetflow_validate_secrets]
 ```
 
 ## Environment Variables
@@ -77,6 +85,7 @@ Claude: [Uses fleetflow_down with stage="local", remove=true]
 |----------|-------------|
 | `FLEET_STAGE` | Default stage name (local/dev/pre/live) |
 | `FLEETFLOW_CONFIG_PATH` | Direct path to config file |
+| `OP_SERVICE_ACCOUNT_TOKEN` | 1Password Service Account token (CI/CD) |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API token (for DNS) |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID |
 | `CLOUDFLARE_DOMAIN` | Managed domain |
@@ -86,6 +95,7 @@ Claude: [Uses fleetflow_down with stage="local", remove=true]
 - Docker or OrbStack running
 - FleetFlow project with `.fleetflow/fleet.kdl`
 - `fleet` binary in your PATH
+- 1Password CLI (`op`) v2.x+ for secret management (optional)
 
 ## Architecture
 
