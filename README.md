@@ -10,7 +10,7 @@ Claude Code plugin for FleetFlow container orchestration.
 - **Container Management** - Start, stop, restart containers for your project
 - **Build Support** - Build Docker images from Dockerfiles
 - **Log Viewing** - View container logs directly from Claude Code
-- **Configuration Validation** - Validate flow.kdl syntax and structure
+- **Configuration Validation** - Validate fleet.kdl syntax and structure
 - **Cloud Infrastructure** - Manage cloud servers (Sakura Cloud) and DNS (Cloudflare)
 
 ## Installation
@@ -27,7 +27,7 @@ cp .mcp.json ~/.claude/
 
 | Tool | Description | Required Args |
 |------|-------------|---------------|
-| `fleetflow_inspect_project` | Analyze flow.kdl and show project structure | - |
+| `fleetflow_inspect_project` | Analyze fleet.kdl and show project structure | - |
 | `fleetflow_ps` | Show container status for project | - |
 | `fleetflow_up` | Start containers for a stage | `stage` |
 | `fleetflow_down` | Stop containers for a stage | `stage` |
@@ -84,7 +84,7 @@ Claude: [Uses fleetflow_down with stage="local", remove=true]
 ## Requirements
 
 - Docker or OrbStack running
-- FleetFlow project with `flow.kdl` in the current directory or parent directories
+- FleetFlow project with `.fleetflow/fleet.kdl`
 - `fleet` binary in your PATH
 
 ## Architecture
