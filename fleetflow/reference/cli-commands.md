@@ -15,6 +15,7 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 | `start` | 停止中のサービスを起動 |
 | `stop` | サービスを停止 |
 | `restart` | サービスを再起動 |
+| `exec` | コンテナ内でコマンド実行 |
 | `build` | イメージをビルド |
 | `validate` | 設定を検証 |
 | `play` | Playbookを実行 |
@@ -237,6 +238,31 @@ fleet restart local -n web
 **動作**:
 - `docker restart` 相当
 - 停止 → 起動を実行
+
+### `fleet exec`
+
+サービスコンテナ内でコマンドを実行します。
+
+```bash
+fleet exec <stage> -n <service> -- <command...>
+fleet exec prod -n surrealdb -- surreal sql --endpoint http://localhost:8000
+fleet exec prod -n caddy -- caddy reload
+fleet exec prod -n creo-app-server -- ls /app
+fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh
+```
+
+**オプション**:
+
+| オプション | 短縮 | 説明 |
+|-----------|------|------|
+| `--service` | `-n` | サービス名（必須） |
+| `[COMMAND]...` | | `--` 以降に実行するコマンドを指定。省略時は `/bin/sh` |
+
+**動作**:
+- `docker exec` 相当
+- FleetFlowの命名規則（`{project}-{stage}-{service}`）でコンテナ名を自動解決
+- stdout/stderrをリアルタイムで出力
+- コマンドの終了コードをそのまま返す
 
 ### `fleet build`
 

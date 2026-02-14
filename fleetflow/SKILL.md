@@ -114,6 +114,7 @@ fleet down local     # 停止・削除
 | `start <stage> [-n service]` | 停止中のサービスを起動 |
 | `stop <stage> [-n service]` | サービスを停止（コンテナ保持） |
 | `restart <stage> [-n service]` | サービスを再起動 |
+| `exec <stage> -n <service> [-- cmd...]` | コンテナ内でコマンド実行 |
 | `build <stage> [-n service]` | イメージをビルド |
 | `build <stage> --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
 | `validate` | 設定を検証 |
