@@ -1,9 +1,3 @@
 {
-  "mcpServers": {
-    "fleetflow": {
-      "type": "stdio",
-      "command": "fleet",
-      "args": ["mcp"]
-    }
-  }
+  "mcpServers": {}
 }

@@ -21,7 +21,7 @@ FleetFlowは、KDL（KDL Document Language）をベースにしたコンテナ�
 | 超シンプル | Docker Composeと同等以下の記述量 |
 | 可読性 | YAMLより読みやすいKDL構文 |
 | ステージ管理 | local/dev/pre/live を統一管理 |
-| AIネイティブ | MCP (Model Context Protocol) を標準サポート |
+| AIネイティブ | CLIをそのまま使える設計（Bash経由で操作） |
 | OrbStack連携 | macOSローカル開発に最適化 |
 | Dockerビルド | Dockerfileからのビルドをサポート |
 | イメージプッシュ | ビルド後のレジストリプッシュを自動化 |

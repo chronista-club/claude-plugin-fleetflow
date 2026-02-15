@@ -1,6 +1,6 @@
 {
   "name": "fleetflow",
-  "description": "Container orchestration MCP server - manage Docker containers with KDL configuration",
+  "description": "FleetFlow skill - KDL-based container orchestration CLI guide and reference",
   "version": "0.7.7",
   "author": {
     "name": "Mako",
@@ -12,7 +12,6 @@
     "container",
     "orchestration",
     "kdl",
-    "devtools",
-    "mcp"
+    "devtools"
   ]
 }
