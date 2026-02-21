@@ -19,6 +19,8 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 | `build` | イメージをビルド |
 | `validate` | 設定を検証 |
 | `play` | Playbookを実行 |
+| `registry` | Fleet Registry管理（複数fleet統合） |
+| `stage` | ステージ統合管理（インフラ＋コンテナ） |
 | `cloud` | クラウドインフラ管理 |
 | `mcp` | MCPサーバーを起動 |
 | `self-update` | FleetFlow自体を更新 |
@@ -30,6 +32,7 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 |------|------|
 | `FLEET_STAGE` | ステージ名を指定（local, dev, pre, live） |
 | `FLEETFLOW_CONFIG_PATH` | 設定ファイルの直接パス指定 |
+| `FLEETFLOW_NO_UPDATE_CHECK` | 設定するとセルフアップデートチェックをスキップ |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare APIトークン（DNS自動管理用） |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID（DNS自動管理用） |
 | `CLOUDFLARE_DOMAIN` | 管理対象ドメイン |
@@ -325,6 +328,66 @@ Playbookを実行します。リモートサーバーでのサービス起動な
 fleet play <playbook>
 fleet play deploy-live.kdl
 ```
+
+### `fleet registry`
+
+Fleet Registryを管理します。複数のFleetFlowプロジェクトとサーバーを統合管理し、SSHリモートデプロイを実行できます。
+
+```bash
+# 全fleet・サーバーの一覧
+fleet registry list
+
+# 各fleet × serverの稼働状態
+fleet registry status
+
+# SSHリモートデプロイ
+fleet registry deploy <fleet> --yes
+fleet registry deploy api --yes
+fleet registry deploy api -s live --yes  # ステージ指定
+```
+
+**サブコマンド**:
+
+| サブコマンド | 説明 |
+|-------------|------|
+| `list` | 全fleetとサーバーの一覧を表示 |
+| `status` | 各fleet × serverの稼働状態を表示 |
+| `deploy <fleet>` | SSHリモートデプロイを実行 |
+
+**deployオプション**:
+
+| オプション | 短縮 | 説明 |
+|-----------|------|------|
+| `--yes` | `-y` | 確認なしで実行 |
+| `--stage` | `-s` | デプロイ対象のステージ |
+
+**動作**:
+1. `fleet-registry.kdl` からルートを解決
+2. SSH接続先とデプロイパスを取得
+3. リモートサーバーで `fleet deploy` を実行
+4. リアルタイムで出力を表示
+
+### `fleet stage`
+
+ステージを統合管理します（インフラ＋コンテナを一括操作）。
+
+```bash
+fleet stage up dev --yes       # ステージを起動
+fleet stage down dev           # ステージを停止
+fleet stage status dev         # 状態を確認
+fleet stage ps                 # コンテナ一覧
+fleet stage logs dev -f        # ログ表示
+```
+
+**サブコマンド**:
+
+| サブコマンド | 説明 |
+|-------------|------|
+| `up <stage>` | ステージを起動（インフラ＋コンテナ） |
+| `down <stage>` | ステージを停止 |
+| `status <stage>` | ステージの状態を表示 |
+| `ps [stage]` | コンテナ一覧 |
+| `logs <stage>` | ログ表示 |
 
 ### `fleet cloud`
 

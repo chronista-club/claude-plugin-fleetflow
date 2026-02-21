@@ -15,6 +15,7 @@ fleetflow/
 │   ├── fleetflow-container/    # コンテナ操作
 │   ├── fleetflow-build/        # Dockerビルド機能
 │   ├── fleetflow-mcp/          # MCPサーバー機能
+│   ├── fleetflow-registry/     # Fleet Registry（複数fleet統合管理）
 │   ├── fleetflow-cloud/        # クラウドインフラ抽象化
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド連携
 │   └── fleetflow-cloud-cloudflare/ # Cloudflare連携
@@ -98,6 +99,14 @@ AI/LLMアシスタントとの連携を可能にするMCPサーバーを提供�
 - JSON-RPCベースの通信
 - コンテナ操作のツール提供
 - 設定情報の公開
+
+### fleetflow-registry
+
+Fleet Registry — 複数FleetFlowプロジェクトとサーバーの統合管理。
+
+- `fleet-registry.kdl` のパース
+- fleet/server/route定義の管理
+- SSHリモートデプロイの実行
 
 ### fleetflow-cloud
 
@@ -244,8 +253,12 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 - CI/CDデプロイコマンド
 - セルフアップデート
 
-### Phase 5: 拡張機能（予定）
-- 環境変数参照
-- 変数展開
+### Phase 5: 拡張機能 ✅
+- include ディレクティブ（KDLファイル分割・glob対応）
+- 変数展開（`{{ VAR }}` テンプレート構文）
+- Fleet Registry（複数fleet統合管理・SSHリモートデプロイ）
+- CI環境でのセルフアップデートスキップ
+
+### Phase 6: さらなる拡張（予定）
 - ヘルスチェック強化
 - Cloudflare R2/Workers連携

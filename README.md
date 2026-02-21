@@ -12,6 +12,7 @@ Claude Code plugin for FleetFlow container orchestration.
 - **Log Viewing** - View container logs directly from Claude Code
 - **Configuration Validation** - Validate fleet.kdl syntax and structure
 - **Cloud Infrastructure** - Manage cloud servers (Sakura Cloud) and DNS (Cloudflare)
+- **Fleet Registry** - Manage multiple FleetFlow projects and SSH remote deploy
 
 ## Installation
 
@@ -105,7 +106,8 @@ This plugin is a lightweight configuration package. The MCP server is built into
 fleetflow/                          # Main repo
 ├── crates/
 │   ├── fleetflow/                  # CLI with MCP server
-│   └── fleetflow-mcp/              # MCP server library
+│   ├── fleetflow-mcp/              # MCP server library
+│   └── fleetflow-registry/         # Fleet Registry library
 
 claude-plugin-fleetflow/            # This plugin repo
 ├── .claude-plugin/plugin.json      # Plugin metadata

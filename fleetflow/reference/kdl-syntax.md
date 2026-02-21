@@ -24,6 +24,42 @@ providers { ... }
 server "server-name" { ... }
 ```
 
+## include ディレクティブ
+
+KDLファイルを分割して管理できます：
+
+```kdl
+// flow.kdl
+project "myapp"
+include "services/*.kdl"    // glob パターン対応
+include "redis.kdl"         // 単一ファイル
+```
+
+- **glob 対応**: `*.kdl`, `services/*.kdl` 等のパターンで複数ファイルを読み込み
+- **ネスト可能**: include先からさらにinclude可能
+- **循環参照検出**: 循環includeを自動検出してエラー
+
+## 変数展開
+
+`{{ VAR }}` 構文でテンプレート変数を展開：
+
+```kdl
+variables {
+    APP_PORT "3000"
+    DB_HOST "localhost"
+}
+
+service "api" {
+    image "myapp:latest"
+    env {
+        DATABASE_URL "postgres://{{ DB_HOST }}:5432/mydb"
+    }
+}
+```
+
+- 環境変数からも自動取得
+- `variables` ブロックの定義が環境変数より優先
+
 ## プロジェクト宣言
 
 ```kdl
@@ -310,6 +346,42 @@ stage "dev" {
 | `disk` | ディスクサイズとOS |
 | `ssh-key` | SSH公開鍵のパス |
 | `dns_aliases` | DNSエイリアス（CNAMEレコード） |
+
+## Fleet Registry 定義
+
+`fleet-registry.kdl` で複数fleetとサーバーを統合管理：
+
+```kdl
+registry "my-org"
+
+fleet "api" {
+    path "/opt/apps/fleets/api"
+    description "APIサーバー"
+}
+
+fleet "frontend" {
+    path "/opt/apps/fleets/frontend"
+}
+
+server "vps-01" {
+    provider "sakura-cloud"
+    plan "4core-8gb"
+    ssh-host "153.x.x.x"
+    ssh-user "root"
+    deploy-path "/opt/apps"
+}
+
+route "api:live" {
+    server "vps-01"
+}
+```
+
+| ノード | 説明 |
+|--------|------|
+| `registry` | Registry名 |
+| `fleet` | FleetFlowプロジェクト定義 |
+| `server` | サーバー定義（SSH接続情報含む） |
+| `route` | fleet:stage → server のマッピング |
 
 ## サービスマージ機能
 

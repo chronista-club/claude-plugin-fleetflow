@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.7.7
+version: 0.7.8
 ---
 
 # FleetFlow スキル
@@ -32,6 +32,9 @@ FleetFlowは、KDL（KDL Document Language）をベースにしたコンテナ�
 | クラウド対応 | さくらのクラウド、Cloudflareなど複数プロバイダー |
 | DNS自動管理 | Cloudflare DNSとの自動連携 |
 | CI/CDデプロイ | deployコマンドによる自動デプロイ |
+| Fleet Registry | 複数fleetとサーバーの統合管理・SSHリモートデプロイ |
+| include | KDLファイルの分割・再利用（glob対応） |
+| 変数展開 | `{{ VAR }}` によるテンプレート変数 |
 | セルフアップデート | 最新バージョンへの自動更新 |
 
 ## クイックスタート
@@ -86,6 +89,7 @@ fleet down local     # 停止・削除
 |------|------|
 | `FLEET_STAGE` | ステージ名を指定（local, dev, pre, live） |
 | `FLEETFLOW_CONFIG_PATH` | 設定ファイルの直接パス指定 |
+| `FLEETFLOW_NO_UPDATE_CHECK` | 設定するとセルフアップデートチェックをスキップ |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare APIトークン（DNS自動管理用） |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID（DNS自動管理用） |
 
@@ -118,6 +122,11 @@ fleet down local     # 停止・削除
 | `build <stage> [-n service]` | イメージをビルド |
 | `build <stage> --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
 | `validate` | 設定を検証 |
+| `play <playbook> [--yes]` | Playbookを実行（リモートサーバーでサービス起動） |
+| `registry list` | Fleet Registryの全fleet・サーバー一覧 |
+| `registry status` | 各fleet × serverの稼働状態を表示 |
+| `registry deploy <fleet> [--yes]` | Registry定義に従ってSSHリモートデプロイ |
+| `stage up/down/status/ps/logs` | ステージ統合管理（インフラ＋コンテナ） |
 | `cloud up <stage>` | クラウド環境を構築 |
 | `cloud down <stage>` | クラウド環境を削除 |
 | `mcp` | MCPサーバーを起動 |
@@ -344,6 +353,78 @@ service "api" {
 }
 ```
 
+### include ディレクティブ
+
+KDLファイルを分割して管理できます：
+
+```kdl
+// flow.kdl
+project "myapp"
+
+include "services/*.kdl"   // glob パターンで複数ファイルを読み込み
+include "redis.kdl"        // 単一ファイルの読み込み
+```
+
+**特徴**:
+- glob パターン対応（`*.kdl`, `services/*.kdl` 等）
+- ネスト可能（include先のファイルからさらにinclude）
+- 循環参照を自動検出してエラー
+
+### 変数展開
+
+KDL設定内で `{{ VAR }}` 構文によるテンプレート変数を使用できます：
+
+```kdl
+variables {
+    APP_PORT "3000"
+    DB_HOST "localhost"
+}
+
+service "api" {
+    image "myapp:latest"
+    env {
+        DATABASE_URL "postgres://{{ DB_HOST }}:5432/mydb"
+    }
+    ports {
+        port {{ APP_PORT }} 3000
+    }
+}
+```
+
+- 環境変数からも自動的に変数を取得
+- `variables` ブロックで定義した値が環境変数より優先
+
+### Fleet Registry（複数fleet統合管理）
+
+複数のFleetFlowプロジェクトとサーバーを一元管理し、SSHリモートデプロイを実行：
+
+```kdl
+// fleet-registry.kdl
+registry "my-org"
+
+fleet "api" {
+    path "/opt/apps/fleets/api"
+    description "APIサーバー"
+}
+
+server "vps-01" {
+    provider "sakura-cloud"
+    ssh-host "153.x.x.x"
+    ssh-user "root"
+    deploy-path "/opt/apps"
+}
+
+route "api:live" {
+    server "vps-01"
+}
+```
+
+```bash
+fleet registry list               # fleet・サーバー一覧
+fleet registry status             # 稼働状態を確認
+fleet registry deploy api --yes   # SSH経由でリモートデプロイ
+```
+
 ### DNS自動管理（Cloudflare）
 
 `cloud up`/`cloud down`時にDNSレコードを自動管理：
@@ -413,6 +494,7 @@ fleetflow/
 │   ├── fleetflow-container/    # コンテナ操作
 │   ├── fleetflow-build/        # Dockerビルド
 │   ├── fleetflow-mcp/          # MCPサーバー
+│   ├── fleetflow-registry/     # Fleet Registry（複数fleet統合管理）
 │   ├── fleetflow-cloud/        # クラウド抽象化
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド
 │   └── fleetflow-cloud-cloudflare/ # Cloudflare
@@ -428,9 +510,10 @@ fleetflow/
 このスキルは以下の場合に参照してください：
 
 - プロジェクトにFleetFlowを導入する際
-- `flow.kdl` 設定ファイルを作成・編集する際
+- `flow.kdl` / `fleet-registry.kdl` 設定ファイルを作成・編集する際
 - コンテナ環境の構築・管理を行う際
 - ローカル開発環境のセットアップ時
+- 複数fleetの統合管理（Fleet Registry）を行う際
 - クラウドインフラを宣言的に管理する際
 
 ## リファレンス
