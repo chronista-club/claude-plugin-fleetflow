@@ -80,6 +80,53 @@ User: Validate the 1Password secret references
 Claude: [Uses fleetflow_validate_secrets]
 ```
 
+## ステージ管理
+
+FleetFlowは `local` / `dev` / `pre` / `live` の4ステージでインフラを統一管理する。MCPツールの `stage` 引数でステージを指定する。
+
+| ステージ | 用途 |
+|----------|------|
+| `local` | ローカル開発環境（OrbStack/Docker Desktop） |
+| `dev` | 開発サーバー |
+| `pre` | ステージング・検証環境 |
+| `live` | 本番環境 |
+
+環境変数 `FLEET_STAGE` を設定すると、MCPツールのデフォルトステージとして使用される。
+
+## fleet.kdl 設定の基本
+
+プロジェクトの `.fleetflow/fleet.kdl` に設定を記述する:
+
+```kdl
+project "myapp"
+
+stage "local" {
+    service "db"
+    service "api"
+}
+
+service "db" {
+    image "postgres:16"          // image は必須
+    restart "unless-stopped"
+    ports {
+        port host=5432 container=5432
+    }
+    env {
+        POSTGRES_PASSWORD "postgres"
+    }
+}
+
+service "api" {
+    image "myapp/api:latest"
+    depends_on "db"
+    ports {
+        port host=3000 container=3000
+    }
+}
+```
+
+詳細なKDL構文はスキルの `reference/kdl-syntax.md` を参照。
+
 ## Environment Variables
 
 | Variable | Description |
