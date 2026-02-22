@@ -6,7 +6,6 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 
 | コマンド | 説明 |
 |---------|------|
-| `setup` | ステージの環境をセットアップ（冪等） |
 | `up` | ステージを起動 |
 | `down` | ステージを停止・削除 |
 | `deploy` | CI/CD向けデプロイ |
@@ -51,21 +50,6 @@ FLEET_STAGE=local fleet up
 ```
 
 ## 詳細
-
-### `fleet setup`
-
-ステージの環境をセットアップします（冪等）。初回セットアップ時に使用。
-
-```bash
-fleet setup <stage>
-fleet setup local
-fleet setup dev
-```
-
-**動作**:
-- 必要なディレクトリやボリュームの作成
-- 設定ファイルの配置
-- 冪等性を保証（何度実行しても同じ結果）
 
 ### `fleet up`
 

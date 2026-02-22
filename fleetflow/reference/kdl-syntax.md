@@ -51,7 +51,7 @@ variables {
 
 service "api" {
     image "myapp:latest"
-    env {
+    environment {
         DATABASE_URL "postgres://{{ DB_HOST }}:5432/mydb"
     }
 }
@@ -139,7 +139,7 @@ ports {
 ### 環境変数
 
 ```kdl
-env {
+environment {
     DATABASE_URL "postgres://localhost:5432/mydb"
     DEBUG "true"
     NODE_ENV "development"
@@ -392,12 +392,12 @@ route "api:live" {
 service "api" {
     image "myapp:latest"
     ports { port 8080 3000 }
-    env { NODE_ENV "production" }
+    environment { NODE_ENV "production" }
 }
 
 // flow.local.kdl（ローカルオーバーライド）
 service "api" {
-    env { DATABASE_URL "localhost:5432" }
+    environment { DATABASE_URL "localhost:5432" }
 }
 
 // 結果:
@@ -412,7 +412,7 @@ service "api" {
 |----------------|--------|-----|
 | `Option<T>` | 後の定義が`Some`なら上書き | image, command, build, healthcheck |
 | `Vec<T>` | 後の定義が空でなければ上書き | ports, volumes, depends_on |
-| `HashMap<K, V>` | 両方をマージ（後の定義が優先） | env (environment) |
+| `HashMap<K, V>` | 両方をマージ（後の定義が優先） | environment |
 
 ## 設定ファイル検索順序
 
@@ -455,7 +455,7 @@ service "db" {
     ports {
         port 5432 5432
     }
-    env {
+    environment {
         POSTGRES_DB "myapp"
         POSTGRES_USER "myapp"
         POSTGRES_PASSWORD "secret"
@@ -488,7 +488,7 @@ service "web" {
     ports {
         port 3000 3000
     }
-    env {
+    environment {
         NODE_ENV "development"
         DATABASE_URL "postgres://myapp:secret@db:5432/myapp"
         REDIS_URL "redis://redis:6379"

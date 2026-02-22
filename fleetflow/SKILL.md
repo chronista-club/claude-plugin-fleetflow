@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.7.8
+version: 0.7.9
 ---
 
 # FleetFlow スキル
@@ -67,7 +67,7 @@ service "db" {
     ports {
         port host=5432 container=5432
     }
-    env {
+    environment {
         POSTGRES_PASSWORD "postgres"
     }
 }
@@ -76,7 +76,6 @@ service "db" {
 ### 基本操作
 
 ```bash
-fleet setup local    # 初回セットアップ（冪等）
 fleet up local       # 起動
 fleet ps             # 状態確認
 fleet logs           # ログ表示
@@ -109,7 +108,6 @@ fleet down local     # 停止・削除
 
 | コマンド | 説明 |
 |---------|------|
-| `setup <stage>` | ステージの環境をセットアップ（冪等） |
 | `up <stage>` | ステージを起動 |
 | `down <stage>` | ステージを停止・削除 |
 | `deploy <stage> --yes` | CI/CD向けデプロイ（デフォルトでpull） |
@@ -151,7 +149,7 @@ service "db" {              // サービス定義
     depends_on "other"      // 依存サービス
     wait_for { ... }        // 依存サービス待機設定
     ports { ... }
-    env { ... }
+    environment { ... }
     volumes { ... }
     build { ... }           // Dockerビルド設定
     healthcheck { ... }     // ヘルスチェック設定
@@ -199,12 +197,12 @@ service "db" {
 service "api" {
     image "myapp:latest"
     ports { port host=8080 container=3000 }
-    env { NODE_ENV "production" }
+    environment { NODE_ENV "production" }
 }
 
 // flow.local.kdl（ローカルオーバーライド）
 service "api" {
-    env { DATABASE_URL "localhost:5432" }
+    environment { DATABASE_URL "localhost:5432" }
 }
 
 // 結果:
@@ -382,7 +380,7 @@ variables {
 
 service "api" {
     image "myapp:latest"
-    env {
+    environment {
         DATABASE_URL "postgres://{{ DB_HOST }}:5432/mydb"
     }
     ports {
