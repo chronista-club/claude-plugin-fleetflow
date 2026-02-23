@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.7.9
+version: 0.7.10
 ---
 
 # FleetFlow スキル
@@ -89,6 +89,8 @@ fleet down local     # 停止・削除
 | `FLEET_STAGE` | ステージ名を指定（local, dev, pre, live） |
 | `FLEETFLOW_CONFIG_PATH` | 設定ファイルの直接パス指定 |
 | `FLEETFLOW_NO_UPDATE_CHECK` | 設定するとセルフアップデートチェックをスキップ |
+| `GHCR_TOKEN` | GitHub Container Registry認証トークン（プライベートGHCRからのpull用） |
+| `GITHUB_TOKEN` | GitHubトークン（`GHCR_TOKEN`未設定時のフォールバック） |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare APIトークン（DNS自動管理用） |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID（DNS自動管理用） |
 
@@ -259,10 +261,12 @@ fleet build local -n api --push --tag v1.0.0
 fleet build live -n api --push --platform linux/amd64
 ```
 
-**認証方式**:
-- Docker標準の `~/.docker/config.json` から認証情報を取得
-- credential helper（osxkeychain, desktop など）も自動対応
+**認証方式**（優先順）:
+1. Docker標準の `~/.docker/config.json`（auths セクション）
+2. credential helper（osxkeychain, desktop など）
+3. 環境変数フォールバック（`GHCR_TOKEN` → `GITHUB_TOKEN`、GHCR専用）
 - 環境変数 `DOCKER_CONFIG` でパスをカスタマイズ可能
+- VPS等で `config.json` がない環境でも環境変数だけでプライベートGHCRからpull可能
 
 **対応レジストリ**:
 - Docker Hub (docker.io)
