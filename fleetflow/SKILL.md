@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.7.10
+version: 0.8.0
 ---
 
 # FleetFlow スキル
@@ -112,15 +112,15 @@ fleet down local     # 停止・削除
 |---------|------|
 | `up <stage>` | ステージを起動 |
 | `down <stage>` | ステージを停止・削除 |
-| `deploy <stage> --yes` | CI/CD向けデプロイ（デフォルトでpull） |
+| `deploy <stage> [-n svc]... --yes` | CI/CD向けデプロイ（デフォルトでpull） |
 | `ps [--all]` | コンテナ一覧 |
 | `logs [-f] [-n service]` | ログ表示 |
 | `start <stage> [-n service]` | 停止中のサービスを起動 |
 | `stop <stage> [-n service]` | サービスを停止（コンテナ保持） |
 | `restart <stage> [-n service]` | サービスを再起動 |
 | `exec <stage> -n <service> [-- cmd...]` | コンテナ内でコマンド実行 |
-| `build <stage> [-n service]` | イメージをビルド |
-| `build <stage> --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
+| `build <stage> [-n svc]...` | イメージをビルド |
+| `build <stage> [-n svc]... --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
 | `validate` | 設定を検証 |
 | `play <playbook> [--yes]` | Playbookを実行（リモートサーバーでサービス起動） |
 | `registry list` | Fleet Registryの全fleet・サーバー一覧 |
@@ -250,6 +250,9 @@ service "worker" {
 ```bash
 # ビルドのみ
 fleet build local -n api
+
+# 複数サービスを同時ビルド（-n を繰り返す）
+fleet build local -n api -n worker
 
 # ビルド＆プッシュ
 fleet build local -n api --push
@@ -447,6 +450,12 @@ CI/CDパイプラインからの自動デプロイに最適化されたコマン
 # 基本的な使い方（デフォルトでpull）
 fleet deploy live --yes
 
+# 特定サービスのみデプロイ
+fleet deploy dev -n api --yes
+
+# 複数サービスを同時指定（-n を繰り返す）
+fleet deploy dev -n api -n worker --yes
+
 # pullをスキップ
 fleet deploy live --no-pull --yes
 
@@ -457,6 +466,7 @@ ssh user@vps "cd /app && fleet deploy live --yes"
 **オプション:**
 | オプション | 説明 |
 |-----------|------|
+| `-n <service>` | デプロイ対象サービス（複数指定可） |
 | `--no-pull` | イメージのpullをスキップ（デフォルトはpull） |
 | `--yes` / `-y` | 確認なしで実行（CI向け） |
 

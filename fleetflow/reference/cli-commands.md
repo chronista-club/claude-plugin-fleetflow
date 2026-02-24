@@ -107,8 +107,10 @@ CI/CDパイプラインからの自動デプロイに最適化されたコマン
 
 ```bash
 fleet deploy <stage> --yes
-fleet deploy live --yes           # 確認なしでデプロイ
-fleet deploy live --no-pull --yes # pullをスキップ
+fleet deploy live --yes                        # 確認なしでデプロイ
+fleet deploy dev -n api --yes                  # 特定サービスのみ
+fleet deploy dev -n api -n worker --yes        # 複数サービスを同時指定
+fleet deploy live --no-pull --yes              # pullをスキップ
 ```
 
 **オプション**:
@@ -117,7 +119,8 @@ fleet deploy live --no-pull --yes # pullをスキップ
 |-----------|------|------|
 | `--yes` | `-y` | 確認なしで実行（CI向け） |
 | `--no-pull` | | イメージのpullをスキップ（デフォルトはpull） |
-| `-n <service>` | | 特定サービスのみ |
+| `--no-prune` | | デプロイ後の不要イメージ削除をスキップ |
+| `-n <service>` | | デプロイ対象サービス（複数指定可、`-n` を繰り返す） |
 
 **動作**:
 1. 既存コンテナを強制停止・削除
@@ -259,6 +262,7 @@ fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh
 fleet build <stage>                   # ステージ内の全サービス
 fleet build <stage> -n <service>      # 特定サービスのみ
 fleet build local -n api
+fleet build local -n api -n worker    # 複数サービスを同時ビルド
 fleet build local --no-cache          # キャッシュなしでビルド
 
 # レジストリにプッシュ
@@ -273,7 +277,7 @@ fleet build live -n api --push --platform linux/amd64
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
-| `-n` | | サービス名 |
+| `-n` | | サービス名（複数指定可、`-n` を繰り返す） |
 | `--no-cache` | | キャッシュを使わずにビルド |
 | `--push` | | ビルド後にレジストリへプッシュ |
 | `--tag` | | イメージタグを指定（`--push`と併用） |
