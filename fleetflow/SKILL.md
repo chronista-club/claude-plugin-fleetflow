@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.8.0
+version: 0.8.1
 ---
 
 # FleetFlow スキル
@@ -126,7 +126,8 @@ fleet down local     # 停止・削除
 | `registry list` | Fleet Registryの全fleet・サーバー一覧 |
 | `registry status` | 各fleet × serverの稼働状態を表示 |
 | `registry deploy <fleet> [--yes]` | Registry定義に従ってSSHリモートデプロイ |
-| `stage up/down/status/ps/logs` | ステージ統合管理（インフラ＋コンテナ） |
+| `stage up <stage> --yes` | ステージ起動（--yes 必須） |
+| `stage down/status/ps/logs` | ステージ停止・状態確認 |
 | `cloud up <stage>` | クラウド環境を構築 |
 | `cloud down <stage>` | クラウド環境を削除 |
 | `mcp` | MCPサーバーを起動 |
