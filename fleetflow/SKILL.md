@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.8.1
+version: 0.9.0
 ---
 
 # FleetFlow スキル
@@ -77,10 +77,18 @@ service "db" {
 
 ```bash
 fleet up local       # 起動
-fleet ps             # 状態確認
+fleet status         # 設定 vs 実態の差分表示
+fleet ps             # コンテナ一覧
 fleet logs           # ログ表示
 fleet down local     # 停止・削除
 ```
+
+### グローバルフラグ
+
+| フラグ | 説明 |
+|--------|------|
+| `-v / --verbose` | デバッグレベルの詳細出力 |
+| `-q / --quiet` | エラー以外の出力を抑制 |
 
 ## 環境変数
 
@@ -110,15 +118,16 @@ fleet down local     # 停止・削除
 
 | コマンド | 説明 |
 |---------|------|
-| `up <stage>` | ステージを起動 |
+| `up <stage> [--dry-run]` | ステージを起動（`--dry-run`で実行計画のみ表示） |
 | `down <stage>` | ステージを停止・削除 |
-| `deploy <stage> [-n svc]... --yes` | CI/CD向けデプロイ（デフォルトでpull） |
+| `deploy <stage> [-n svc]... --yes [--dry-run]` | CI/CD向けデプロイ（`--dry-run`で計画のみ） |
+| `status [stage]` | 設定 vs 実態の差分表示（running/stopped/missing） |
 | `ps [--all]` | コンテナ一覧 |
-| `logs [-f] [-n service]` | ログ表示 |
+| `logs [-f] [-n service] [--since 5m]` | ログ表示（`--since`で時間指定可） |
 | `start <stage> [-n service]` | 停止中のサービスを起動 |
 | `stop <stage> [-n service]` | サービスを停止（コンテナ保持） |
 | `restart <stage> [-n service]` | サービスを再起動 |
-| `exec <stage> -n <service> [-- cmd...]` | コンテナ内でコマンド実行 |
+| `exec <stage> -n <service> [-i] [-t] [-- cmd...]` | コンテナ内でコマンド実行（`-i`/`-t`でインタラクティブ） |
 | `build <stage> [-n svc]...` | イメージをビルド |
 | `build <stage> [-n svc]... --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
 | `validate` | 設定を検証 |

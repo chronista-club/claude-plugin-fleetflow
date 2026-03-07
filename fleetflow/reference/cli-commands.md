@@ -10,6 +10,7 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 | `down` | ステージを停止・削除 |
 | `deploy` | CI/CD向けデプロイ |
 | `ps` | コンテナ一覧 |
+| `status` | 設定とコンテナの状態を比較表示 |
 | `logs` | ログ表示 |
 | `start` | 停止中のサービスを起動 |
 | `stop` | サービスを停止 |
@@ -24,6 +25,17 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 | `mcp` | MCPサーバーを起動 |
 | `self-update` | FleetFlow自体を更新 |
 | `version` | バージョン表示 |
+
+## グローバルフラグ
+
+全コマンド共通で使用できるフラグです。
+
+| フラグ | 短縮 | 説明 |
+|--------|------|------|
+| `--verbose` | `-v` | 詳細な出力を表示（デバッグ情報含む） |
+| `--quiet` | `-q` | 出力を最小限に抑える（エラーのみ） |
+
+`-v` と `-q` は排他的で、同時に指定するとエラーになります。
 
 ## 環境変数
 
@@ -61,6 +73,7 @@ fleet up local
 fleet up local --pull        # イメージを事前にpull
 fleet up local --build       # ビルドしてから起動
 fleet up local --build --no-cache  # キャッシュなしでビルド
+fleet up local --dry-run           # 実行計画を表示（実際には起動しない）
 ```
 
 **オプション**:
@@ -70,6 +83,7 @@ fleet up local --build --no-cache  # キャッシュなしでビルド
 | `--pull` | 起動前にイメージをpull |
 | `--build` | 起動前にイメージをビルド |
 | `--no-cache` | キャッシュを使わずにビルド（`--build`と併用） |
+| `--dry-run` | 実行計画を表示するだけで実際の操作は行わない |
 | `-n <service>` | 特定サービスのみ |
 
 **動作**:
@@ -111,6 +125,7 @@ fleet deploy live --yes                        # 確認なしでデプロイ
 fleet deploy dev -n api --yes                  # 特定サービスのみ
 fleet deploy dev -n api -n worker --yes        # 複数サービスを同時指定
 fleet deploy live --no-pull --yes              # pullをスキップ
+fleet deploy dev --dry-run                     # 実行計画を表示
 ```
 
 **オプション**:
@@ -120,6 +135,7 @@ fleet deploy live --no-pull --yes              # pullをスキップ
 | `--yes` | `-y` | 確認なしで実行（CI向け） |
 | `--no-pull` | | イメージのpullをスキップ（デフォルトはpull） |
 | `--no-prune` | | デプロイ後の不要イメージ削除をスキップ |
+| `--dry-run` | | 実行計画を表示するだけで実際の操作は行わない |
 | `-n <service>` | | デプロイ対象サービス（複数指定可、`-n` を繰り返す） |
 
 **動作**:
@@ -148,6 +164,21 @@ fleet ps --all           # 停止中も含む
 - 状態（Running/Stopped）
 - ポートマッピング
 
+### `fleet status`
+
+設定ファイルのサービス定義と実際のDockerコンテナの状態を比較表示します。
+
+```bash
+fleet status <stage>
+fleet status local
+```
+
+**表示内容**:
+- 各サービスの状態（Running / Stopped / Missing）
+- 設定されているがコンテナが存在しないサービスを検出
+- カラー表示による視覚的な状態把握
+- サマリー（running/stopped/missing の件数）
+
 ### `fleet logs`
 
 コンテナのログを表示します。
@@ -157,6 +188,8 @@ fleet logs                       # 全サービス
 fleet logs -n <service>          # 特定サービス
 fleet logs -f                    # リアルタイム表示
 fleet logs --lines 100           # 行数指定
+fleet logs --since 5m            # 直近5分のログ
+fleet logs --since 1h -n web     # 直近1時間のwebサービスログ
 fleet logs -f -n web             # 組み合わせ
 ```
 
@@ -167,6 +200,7 @@ fleet logs -f -n web             # 組み合わせ
 | `--name` | `-n` | サービス名 |
 | `--follow` | `-f` | リアルタイムで追従 |
 | `--lines` | | 表示する行数（デフォルト: 100） |
+| `--since` | | 指定期間内のログのみ表示（例: `5m`, `1h`, `30s`） |
 
 ### `fleet start`
 
@@ -238,7 +272,9 @@ fleet exec <stage> -n <service> -- <command...>
 fleet exec prod -n surrealdb -- surreal sql --endpoint http://localhost:8000
 fleet exec prod -n caddy -- caddy reload
 fleet exec prod -n creo-app-server -- ls /app
-fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh
+fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh（インタラクティブ）
+fleet exec prod -n app -i -- top        # インタラクティブモード
+fleet exec prod -n app -i -t -- bash    # TTY付きインタラクティブモード
 ```
 
 **オプション**:
@@ -246,11 +282,14 @@ fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
 | `--service` | `-n` | サービス名（必須） |
-| `[COMMAND]...` | | `--` 以降に実行するコマンドを指定。省略時は `/bin/sh` |
+| `--interactive` | `-i` | stdin をアタッチ（インタラクティブモード） |
+| `--tty` | `-t` | 疑似TTYを割り当て |
+| `[COMMAND]...` | | `--` 以降に実行するコマンドを指定。省略時は `/bin/sh`（自動で `-i -t` が有効） |
 
 **動作**:
 - `docker exec` 相当
 - FleetFlowの命名規則（`{project}-{stage}-{service}`）でコンテナ名を自動解決
+- シェルコマンド（sh/bash）実行時は自動で `-i -t` を有効化
 - stdout/stderrをリアルタイムで出力
 - コマンドの終了コードをそのまま返す
 
@@ -455,7 +494,7 @@ fleet self-update
 
 ```bash
 fleet version
-# 出力: fleetflow 0.5.0
+# 出力: fleetflow 0.8.1
 ```
 
 ## 終了コード
