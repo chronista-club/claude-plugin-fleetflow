@@ -19,9 +19,10 @@ fleetflow/
 │   ├── fleetflow-cloud/        # クラウドインフラ抽象化
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド連携
 │   └── fleetflow-cloud-cloudflare/ # Cloudflare連携
-├── spec/                       # 仕様書
-├── design/                     # 設計書
-└── guides/                     # 利用ガイド
+├── docs/
+│   ├── spec/                   # 仕様書（What & Why）
+│   ├── design/                 # 設計書（How）
+│   └── guide/                  # 利用ガイド（Usage）
 ```
 
 ## クレート概要
@@ -196,7 +197,9 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 
 ## ドキュメント構造
 
-### spec/ - 仕様書（What & Why）
+全ドキュメントは `docs/` 配下に統合されています。
+
+### docs/spec/ - 仕様書（What & Why）
 
 機能の目的と仕様を定義。
 
@@ -207,8 +210,9 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 - `07-docker-build.md` - Dockerビルド
 - `08-cloud-infrastructure.md` - クラウドインフラ
 - `09-dns-integration.md` - DNS連携
+- `18-platform-vision.md` - Platform ビジョン（Control Plane 進化）
 
-### design/ - 設計書（How）
+### docs/design/ - 設計書（How）
 
 実装の詳細設計。
 
@@ -218,7 +222,7 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 - `04-cloud-infrastructure.md` - クラウド設計
 - `05-dns-integration.md` - DNS連携設計
 
-### guides/ - 利用ガイド（Usage）
+### docs/guide/ - 利用ガイド（Usage）
 
 ユースケース別の使い方。
 
@@ -259,6 +263,12 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 - Fleet Registry（複数fleet統合管理・SSHリモートデプロイ）
 - CI環境でのセルフアップデートスキップ
 
-### Phase 6: さらなる拡張（予定）
-- ヘルスチェック強化
-- Cloudflare R2/Workers連携
+### Phase 6: ヘルスチェック強化 ✅
+- `fleet ps` に HEALTH 列追加（healthy/unhealthy/starting 表示）
+- readiness チェック（サービス起動時の準備完了確認）
+
+### Phase 7: Platform 進化（予定）
+- Control Plane（常駐デーモン + Core API）
+- マルチプロジェクト横断管理
+- WebUI Dashboard
+- 詳細: `docs/spec/18-platform-vision.md`

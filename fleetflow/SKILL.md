@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.9.0
+version: 0.10.0
 ---
 
 # FleetFlow スキル
@@ -122,7 +122,7 @@ fleet down local     # 停止・削除
 | `down <stage>` | ステージを停止・削除 |
 | `deploy <stage> [-n svc]... --yes [--dry-run]` | CI/CD向けデプロイ（`--dry-run`で計画のみ） |
 | `status [stage]` | 設定 vs 実態の差分表示（running/stopped/missing） |
-| `ps [--all]` | コンテナ一覧 |
+| `ps [--all]` | コンテナ一覧（HEALTH列でヘルス状態表示） |
 | `logs [-f] [-n service] [--since 5m]` | ログ表示（`--since`で時間指定可） |
 | `start <stage> [-n service]` | 停止中のサービスを起動 |
 | `stop <stage> [-n service]` | サービスを停止（コンテナ保持） |
@@ -520,9 +520,10 @@ fleetflow/
 │   ├── fleetflow-cloud/        # クラウド抽象化
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド
 │   └── fleetflow-cloud-cloudflare/ # Cloudflare
-├── spec/                       # 仕様書
-├── design/                     # 設計書
-└── guides/                     # 利用ガイド
+├── docs/
+│   ├── spec/                   # 仕様書（What & Why）
+│   ├── design/                 # 設計書（How）
+│   └── guide/                  # 利用ガイド（Usage）
 ```
 
 詳細: [reference/architecture.md](reference/architecture.md)

@@ -163,6 +163,7 @@ fleet ps --all           # 停止中も含む
 - コンテナ名
 - 状態（Running/Stopped）
 - ポートマッピング
+- HEALTH 列（healthy/unhealthy/starting — healthcheck 定義がある場合）
 
 ### `fleet status`
 
@@ -494,7 +495,7 @@ fleet self-update
 
 ```bash
 fleet version
-# 出力: fleetflow 0.8.1
+# 出力: fleetflow 0.9.1
 ```
 
 ## 終了コード
