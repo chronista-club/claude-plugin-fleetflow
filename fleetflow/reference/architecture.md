@@ -18,10 +18,10 @@ fleetflow/
 │   ├── fleetflow-registry/     # Fleet Registry（複数fleet統合管理）
 │   ├── fleetflow-cloud/        # クラウドインフラ抽象化
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド連携
-│   └── fleetflow-cloud-cloudflare/ # Cloudflare連携
+│   ├── fleetflow-cloud-cloudflare/ # Cloudflare連携
+│   ├── fleetflow-controlplane/# Control Plane ライブラリ
+│   └── fleetflowd/            # Control Plane デーモン
 ├── docs/
-│   ├── spec/                   # 仕様書（What & Why）
-│   ├── design/                 # 設計書（How）
 │   └── guide/                  # 利用ガイド（Usage）
 ```
 
@@ -135,6 +135,25 @@ Cloudflareプロバイダー。
 - R2バケット管理（実装中）
 - Workers管理（予定）
 
+### fleetflow-controlplane
+
+Control Plane ライブラリ。マルチテナント・マルチプロジェクト管理の中核。
+
+- SurrealDB によるデータ永続化
+- Unison QUIC プロトコルによる API 通信
+- Auth0 JWT 認証（JWKS キャッシュ + 鍵ローテーション対応）
+- テナント・プロジェクト・ステージ・サービス・サーバー管理
+- ヘルスチェック・デプロイメント・DNS・コスト管理
+
+### fleetflowd
+
+Control Plane デーモン（常駐プロセス）。
+
+- axum HTTP サーバー（WebUI Dashboard 配信 + REST API）
+- Auth0 SPA SDK 統合による認証付きダッシュボード
+- KDL 設定ファイル（`fleetflowd.kdl`）によるデーモン設定
+- バックグラウンドヘルスチェッカー
+
 ## 技術スタック
 
 | カテゴリ | ライブラリ |
@@ -147,6 +166,10 @@ Cloudflareプロバイダー。
 | エラー | anyhow, thiserror |
 | シリアライズ | serde, serde_json |
 | ログ | tracing |
+| HTTP サーバー | axum |
+| データベース | SurrealDB |
+| 認証 | Auth0 (jsonwebtoken, reqwest) |
+| テンプレート | tera |
 
 ## コンテナ命名規則
 
@@ -197,38 +220,9 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 
 ## ドキュメント構造
 
-全ドキュメントは `docs/` 配下に統合されています。
-
-### docs/spec/ - 仕様書（What & Why）
-
-機能の目的と仕様を定義。
-
-- `01-core-concepts.md` - コアコンセプト
-- `02-kdl-parser.md` - KDLパーサー仕様
-- `03-cli-commands.md` - CLIコマンド仕様
-- `06-orbstack-integration.md` - OrbStack連携
-- `07-docker-build.md` - Dockerビルド
-- `08-cloud-infrastructure.md` - クラウドインフラ
-- `09-dns-integration.md` - DNS連携
-- `18-platform-vision.md` - Platform ビジョン（Control Plane 進化）
-
-### docs/design/ - 設計書（How）
-
-実装の詳細設計。
-
-- `01-kdl-parser.md` - パーサー設計
-- `02-orbstack-integration.md` - OrbStack連携設計
-- `03-docker-build.md` - ビルド機能設計
-- `04-cloud-infrastructure.md` - クラウド設計
-- `05-dns-integration.md` - DNS連携設計
-
-### docs/guide/ - 利用ガイド（Usage）
-
-ユースケース別の使い方。
-
-- `01-orbstack-integration.md` - OrbStack連携ガイド
-- `02-docker-build.md` - Dockerビルドガイド
-- `03-cloud-platforms.md` - 外部プラットフォーム対応状況
+- **仕様書 (spec)**: Creo Memories (fleetflow atlas, category: "spec") — S1〜S10
+- **設計書 (design)**: Creo Memories (fleetflow atlas, category: "design-decision") — D1〜D8
+- **利用ガイド (guide)**: `docs/guide/` + Creo Memories (fleetflow atlas, category: "guide")
 
 ## 開発フェーズ
 
@@ -267,8 +261,9 @@ FleetFlowは主にmacOSのローカル開発環境での利用を想定してお
 - `fleet ps` に HEALTH 列追加（healthy/unhealthy/starting 表示）
 - readiness チェック（サービス起動時の準備完了確認）
 
-### Phase 7: Platform 進化（予定）
-- Control Plane（常駐デーモン + Core API）
+### Phase 7: Platform 進化 ✅
+- Control Plane（常駐デーモン + Core API + Auth0 認証）
 - マルチプロジェクト横断管理
-- WebUI Dashboard
-- 詳細: `docs/spec/18-platform-vision.md`
+- WebUI Dashboard（Auth0 SPA SDK 統合）
+- MCP Server v2（CP 経由 17 ツール）
+- 詳細: Creo Memories (fleetflow atlas, category: "spec") S10
