@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.11.0
+version: 0.13.0
 ---
 
 # FleetFlow スキル
@@ -34,6 +34,9 @@ FleetFlowは、KDL（KDL Document Language）をベースにしたコンテナ�
 | CI/CDデプロイ | deployコマンドによる自動デプロイ |
 | Fleet Registry | 複数fleetとサーバーの統合管理・SSHリモートデプロイ |
 | Control Plane | 常駐デーモン + WebUI Dashboard + Auth0 認証 |
+| Fleet Agent | サーバー常駐エージェント（デプロイ実行・ヘルス監視・アラート） |
+| Dashboard Actions | WebUI から再デプロイ・再起動・アラート確認・ログ閲覧 |
+| LogRouter | コンテナログの topic ベース Pub/Sub 配信 |
 | include | KDLファイルの分割・再利用（glob対応） |
 | 変数展開 | `{{ VAR }}` によるテンプレート変数 |
 | セルフアップデート | 最新バージョンへの自動更新 |
@@ -522,7 +525,8 @@ fleetflow/
 │   ├── fleetflow-cloud-sakura/ # さくらクラウド
 │   ├── fleetflow-cloud-cloudflare/ # Cloudflare
 │   ├── fleetflow-controlplane/# Control Plane ライブラリ
-│   └── fleetflowd/            # Control Plane デーモン
+│   ├── fleetflowd/            # Control Plane デーモン
+│   └── fleet-agent/           # Fleet Agent（サーバー常駐エージェント）
 ├── docs/
 │   └── guide/                 # 利用ガイド（Usage）
 ```

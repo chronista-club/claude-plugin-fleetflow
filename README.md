@@ -26,6 +26,8 @@ cp .mcp.json ~/.claude/
 
 ## MCP Tools
 
+### v1: ローカル操作
+
 | Tool | Description | Required Args |
 |------|-------------|---------------|
 | `fleetflow_inspect_project` | Analyze fleet.kdl and show project structure | - |
@@ -40,6 +42,20 @@ cp .mcp.json ~/.claude/
 | `fleetflow_build` | Build Docker images | `stage` |
 | `fleetflow_setup` | Setup stage environment (idempotent) | `stage` |
 | `fleetflow_env` | Show environment variables (masked) | `stage` |
+
+### v2: Control Plane 経由
+
+| Tool | Description | Required Args |
+|------|-------------|---------------|
+| `fleetflow_cp_tenant` | テナント情報の取得・更新 | - |
+| `fleetflow_cp_project` | プロジェクトの CRUD 操作 | `slug` |
+| `fleetflow_cp_stage` | ステージ概要の取得 | `project`, `stage` |
+| `fleetflow_cp_service` | サービス詳細の取得 | `project`, `stage` |
+| `fleetflow_cp_container` | コンテナ情報の取得 | `project`, `stage` |
+| `fleetflow_cp_server` | サーバーの CRUD + 電源操作 | `slug` |
+| `fleetflow_cp_health` | ヘルスチェック状態の取得 | `project`, `stage` |
+| `fleetflow_cp_cost` | コスト情報の取得 | - |
+| `fleetflow_cp_dns` | DNS レコード管理 | `project`, `stage` |
 
 ## Usage Examples
 
@@ -145,6 +161,30 @@ service "api" {
 - `fleet` binary in your PATH
 - 1Password CLI (`op`) v2.x+ for secret management (optional)
 
+## Fleet Agent
+
+Fleet Agent はリモートサーバー上で動作する常駐エージェント。Control Plane と双方向通信し、以下を実行する:
+
+- **デプロイ実行**: CP からの指示で `docker compose up` を実行
+- **ヘルスモニタリング**: コンテナの状態を定期監視し、異常（再起動ループ、予期しない停止、unhealthy）を検出してアラート送信
+- **アクション応答**: Dashboard からの再デプロイ・再起動リクエストに応答
+
+## Dashboard API
+
+Control Plane の WebUI Dashboard（`127.0.0.1:32080`）から利用可能な API:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/tenant` | テナント情報 |
+| `GET` | `/api/tenant/users` | テナントユーザー一覧 |
+| `GET` | `/api/projects` | プロジェクト一覧 |
+| `GET` | `/api/stages/:project/:stage` | ステージ概要 |
+| `POST` | `/api/stages/:project/:stage/redeploy` | 再デプロイ（CP → Agent → docker compose up） |
+| `POST` | `/api/stages/:project/:stage/restart/:service` | サービス再起動（CP → Agent → docker restart） |
+| `GET` | `/api/stages/:project/:stage/alerts` | アクティブアラート一覧 |
+| `GET` | `/api/stages/:project/:stage/logs/:container` | コンテナログ取得 |
+| `GET` | `/api/agents` | 接続中 Agent 一覧 |
+
 ## Architecture
 
 This plugin is a lightweight configuration package. The MCP server is built into the main FleetFlow CLI:
@@ -153,8 +193,11 @@ This plugin is a lightweight configuration package. The MCP server is built into
 fleetflow/                          # Main repo
 ├── crates/
 │   ├── fleetflow/                  # CLI with MCP server
-│   ├── fleetflow-mcp/              # MCP server library
-│   └── fleetflow-registry/         # Fleet Registry library
+│   ├── fleetflow-mcp/              # MCP server library (v1 + v2)
+│   ├── fleetflow-registry/         # Fleet Registry library
+│   ├── fleetflow-controlplane/     # Control Plane library
+│   ├── fleetflowd/                 # Control Plane daemon
+│   └── fleet-agent/                # Fleet Agent (server-side)
 
 claude-plugin-fleetflow/            # This plugin repo
 ├── .claude-plugin/plugin.json      # Plugin metadata
