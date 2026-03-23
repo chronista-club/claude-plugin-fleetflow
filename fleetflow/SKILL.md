@@ -1,7 +1,7 @@
 ---
 name: fleetflow
 description: FleetFlow（KDLベースのコンテナオーケストレーションツール）を効果的に使用するためのガイド
-version: 0.14.0
+version: 0.15.0
 ---
 
 # FleetFlow スキル
@@ -81,10 +81,10 @@ service "db" {
 
 ```bash
 fleet up local       # 起動
-fleet status         # 設定 vs 実態の差分表示
-fleet ps             # コンテナ一覧
+fleet ps             # コンテナ一覧・状態表示
 fleet logs           # ログ表示
 fleet down local     # 停止・削除
+fleet --version      # バージョン表示
 ```
 
 ### グローバルフラグ
@@ -118,34 +118,47 @@ fleet down local     # 停止・削除
 
 ## CLIコマンド一覧
 
-ステージは位置引数で指定します。環境変数 `FLEET_STAGE` でも指定可能です。
+ステージは位置引数または `-s` フラグで指定。環境変数 `FLEET_STAGE` でも指定可能。
+
+### Daily（日常操作）
 
 | コマンド | 説明 |
 |---------|------|
-| `up <stage> [--dry-run]` | ステージを起動（`--dry-run`で実行計画のみ表示） |
-| `down <stage>` | ステージを停止・削除 |
-| `deploy <stage> [-n svc]... --yes [--dry-run]` | CI/CD向けデプロイ（`--dry-run`で計画のみ） |
-| `status [stage]` | 設定 vs 実態の差分表示（running/stopped/missing） |
-| `ps [--all]` | コンテナ一覧（HEALTH列でヘルス状態表示） |
-| `logs [-f] [-n service] [--since 5m]` | ログ表示（`--since`で時間指定可） |
-| `start <stage> [-n service]` | 停止中のサービスを起動 |
-| `stop <stage> [-n service]` | サービスを停止（コンテナ保持） |
-| `restart <stage> [-n service]` | サービスを再起動 |
-| `exec <stage> -n <service> [-i] [-t] [-- cmd...]` | コンテナ内でコマンド実行（`-i`/`-t`でインタラクティブ） |
-| `build <stage> [-n svc]...` | イメージをビルド |
-| `build <stage> [-n svc]... --push [--tag <tag>]` | ビルド＆レジストリへプッシュ |
-| `validate` | 設定を検証 |
-| `play <playbook> [--yes]` | Playbookを実行（リモートサーバーでサービス起動） |
-| `registry list` | Fleet Registryの全fleet・サーバー一覧 |
-| `registry status` | 各fleet × serverの稼働状態を表示 |
-| `registry deploy <fleet> [--yes]` | Registry定義に従ってSSHリモートデプロイ |
-| `stage up <stage> --yes` | ステージ起動（--yes 必須） |
-| `stage down/status/ps/logs` | ステージ停止・状態確認 |
-| `cloud up <stage>` | クラウド環境を構築 |
-| `cloud down <stage>` | クラウド環境を削除 |
+| `up [stage] [--pull] [--dry-run]` | ステージを起動（`--dry-run`で設定検証・計画表示） |
+| `down [stage] [--remove]` | ステージを停止 |
+| `restart [stage] [-n svc]` | サービスまたはステージ全体を再起動 |
+| `ps [stage] [--all] [--global]` | コンテナ一覧・状態表示 |
+| `logs [stage] [-n svc] [-f] [--since 5m]` | ログ表示 |
+| `exec [stage] -n <svc> [-it] [-- cmd]` | コンテナ内でコマンド実行 |
+
+### Ship（ビルド・デプロイ）
+
+| コマンド | 説明 |
+|---------|------|
+| `build [stage] [-n svc] [--push] [--tag]` | イメージをビルド（`--push`でレジストリへ） |
+| `deploy [stage] [-n svc] --yes [--dry-run]` | CI/CD向けデプロイ |
+
+### Admin（Control Plane — `fleet cp` 配下）
+
+| コマンド | 説明 |
+|---------|------|
+| `cp login / logout / auth` | 認証管理 |
+| `cp daemon start / stop / status` | デーモン管理 |
+| `cp tenant list / create / status` | テナント管理 |
+| `cp project list / create / show` | プロジェクト管理 |
+| `cp server list / register / status / check / ping` | サーバー管理 |
+| `cp cost list / summary / record` | コスト管理 |
+| `cp dns list / create / delete / sync` | DNS 管理 |
+| `cp remote deploy / history` | リモートデプロイ |
+| `cp registry list / status / sync / deploy` | Fleet Registry 管理 |
+
+### Util
+
+| コマンド | 説明 |
+|---------|------|
 | `mcp` | MCPサーバーを起動 |
 | `self-update` | FleetFlow自体を最新版に更新 |
-| `version` | バージョン表示 |
+| `--version` | バージョン表示（フラグ） |
 
 詳細: [reference/cli-commands.md](reference/cli-commands.md)
 
@@ -439,14 +452,14 @@ route "api:live" {
 ```
 
 ```bash
-fleet registry list               # fleet・サーバー一覧
-fleet registry status             # 稼働状態を確認
-fleet registry deploy api --yes   # SSH経由でリモートデプロイ
+fleet cp registry list               # fleet・サーバー一覧
+fleet cp registry status             # 稼働状態を確認
+fleet cp registry deploy api --yes   # SSH経由でリモートデプロイ
 ```
 
 ### DNS自動管理（Cloudflare）
 
-`cloud up`/`cloud down`時にDNSレコードを自動管理：
+ステージ起動・停止時にDNSレコードを自動管理：
 
 - サーバー作成時: `{service}-{stage}.{domain}` のAレコードを自動追加
 - サーバー削除時: DNSレコードを自動削除

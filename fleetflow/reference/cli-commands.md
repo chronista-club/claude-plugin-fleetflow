@@ -4,38 +4,37 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 
 ## コマンド一覧
 
+### Daily（日常操作）
+
 | コマンド | 説明 |
 |---------|------|
 | `up` | ステージを起動 |
-| `down` | ステージを停止・削除 |
-| `deploy` | CI/CD向けデプロイ |
-| `ps` | コンテナ一覧 |
-| `status` | 設定とコンテナの状態を比較表示 |
+| `down` | ステージを停止 |
+| `restart` | サービスまたはステージ全体を再起動 |
+| `ps` | コンテナの一覧・状態を表示 |
 | `logs` | ログ表示 |
-| `start` | 停止中のサービスを起動 |
-| `stop` | サービスを停止 |
-| `restart` | サービスを再起動 |
 | `exec` | コンテナ内でコマンド実行 |
+
+### Ship（ビルド・デプロイ）
+
+| コマンド | 説明 |
+|---------|------|
 | `build` | イメージをビルド |
-| `validate` | 設定を検証 |
-| `play` | Playbookを実行 |
-| `registry` | Fleet Registry管理（複数fleet統合） |
-| `stage` | ステージ統合管理（インフラ＋コンテナ） |
-| `cloud` | クラウドインフラ管理 |
+| `deploy` | デプロイ（pull→停止→再起動） |
+
+### Admin（Control Plane）
+
+| コマンド | 説明 |
+|---------|------|
+| `cp` | Control Plane 管理（サブコマンド群） |
+
+### Util
+
+| コマンド | 説明 |
+|---------|------|
 | `mcp` | MCPサーバーを起動 |
 | `self-update` | FleetFlow自体を更新 |
-| `version` | バージョン表示 |
-
-## グローバルフラグ
-
-全コマンド共通で使用できるフラグです。
-
-| フラグ | 短縮 | 説明 |
-|--------|------|------|
-| `--verbose` | `-v` | 詳細な出力を表示（デバッグ情報含む） |
-| `--quiet` | `-q` | 出力を最小限に抑える（エラーのみ） |
-
-`-v` と `-q` は排他的で、同時に指定するとエラーになります。
+| `--version` | バージョン表示（フラグ） |
 
 ## 環境変数
 
@@ -43,23 +42,9 @@ FleetFlowのCLIコマンド一覧と詳細な使い方です。
 |------|------|
 | `FLEET_STAGE` | ステージ名を指定（local, dev, pre, live） |
 | `FLEETFLOW_CONFIG_PATH` | 設定ファイルの直接パス指定 |
-| `FLEETFLOW_NO_UPDATE_CHECK` | 設定するとセルフアップデートチェックをスキップ |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare APIトークン（DNS自動管理用） |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare Zone ID（DNS自動管理用） |
 | `CLOUDFLARE_DOMAIN` | 管理対象ドメイン |
-
-## ステージ指定方法
-
-v0.5からステージは位置引数で指定します:
-
-```bash
-# 位置引数で指定（推奨）
-fleet up local
-fleet down dev
-
-# 環境変数で指定
-FLEET_STAGE=local fleet up
-```
 
 ## 詳細
 
@@ -68,408 +53,200 @@ FLEET_STAGE=local fleet up
 指定したステージのコンテナを起動します。
 
 ```bash
-fleet up <stage>
+fleet up [stage]
 fleet up local
-fleet up local --pull        # イメージを事前にpull
-fleet up local --build       # ビルドしてから起動
-fleet up local --build --no-cache  # キャッシュなしでビルド
-fleet up local --dry-run           # 実行計画を表示（実際には起動しない）
+fleet up local --pull           # イメージを事前にpull
+fleet up local --dry-run        # 実行せず計画のみ表示（設定検証にも使える）
 ```
 
 **オプション**:
 
-| オプション | 説明 |
-|-----------|------|
-| `--pull` | 起動前にイメージをpull |
-| `--build` | 起動前にイメージをビルド |
-| `--no-cache` | キャッシュを使わずにビルド（`--build`と併用） |
-| `--dry-run` | 実行計画を表示するだけで実際の操作は行わない |
-| `-n <service>` | 特定サービスのみ |
+| オプション | 短縮 | 説明 |
+|-----------|------|------|
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定（`FLEET_STAGE`でも可） |
+| `--pull` | `-p` | 起動前にイメージをpull |
+| `--dry-run` | | 実行せず計画のみ表示 |
 
 **動作**:
 1. 設定ファイルを読み込み
-2. `--build`指定時はイメージをビルド
-3. イメージが無ければ自動pull
-4. 依存関係順にコンテナを作成・起動
-5. `wait_for`設定がある場合は依存サービスの準備を待機
-6. サービスごとに進捗を表示
+2. イメージが無ければ自動pull
+3. 依存関係順にコンテナを作成・起動
+4. `wait_for`設定がある場合は依存サービスの準備を待機
+5. サービスごとに進捗を表示
 
 ### `fleet down`
 
 指定したステージのコンテナを停止・削除します。
 
 ```bash
-fleet down <stage>
+fleet down [stage]
 fleet down local
-fleet down local --remove    # ボリュームも削除
+fleet down local --remove       # ボリュームも削除
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
 | `--remove` | `-r` | ボリュームも削除 |
 
-**動作**:
-1. コンテナを停止
-2. コンテナを削除
-3. `--remove`指定時のみボリュームを削除
+### `fleet restart`
 
-### `fleet deploy`
-
-CI/CDパイプラインからの自動デプロイに最適化されたコマンドです。
+サービスまたはステージ全体を再起動します。
 
 ```bash
-fleet deploy <stage> --yes
-fleet deploy live --yes                        # 確認なしでデプロイ
-fleet deploy dev -n api --yes                  # 特定サービスのみ
-fleet deploy dev -n api -n worker --yes        # 複数サービスを同時指定
-fleet deploy live --no-pull --yes              # pullをスキップ
-fleet deploy dev --dry-run                     # 実行計画を表示
+fleet restart [stage]                # ステージ全体
+fleet restart -s local -n web        # 特定サービスのみ
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
-| `--yes` | `-y` | 確認なしで実行（CI向け） |
-| `--no-pull` | | イメージのpullをスキップ（デフォルトはpull） |
-| `--no-prune` | | デプロイ後の不要イメージ削除をスキップ |
-| `--dry-run` | | 実行計画を表示するだけで実際の操作は行わない |
-| `-n <service>` | | デプロイ対象サービス（複数指定可、`-n` を繰り返す） |
-
-**動作**:
-1. 既存コンテナを強制停止・削除
-2. 最新イメージをpull（`--no-pull`でスキップ可能）
-3. コンテナを依存関係順に作成・起動
-4. `wait_for`による依存サービス待機
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
+| `--service` | `-n` | サービス名（省略時はステージ全体） |
 
 ### `fleet ps`
 
-コンテナの状態を表示します。
+コンテナの一覧・状態を表示します。
 
 ```bash
 fleet ps                 # 実行中のコンテナのみ
+fleet ps -s local        # 特定ステージのみ
 fleet ps --all           # 停止中も含む
+fleet ps --global        # CP 横断: 全プロジェクト・全ステージ
+fleet ps --project myapp # CP 横断: 特定プロジェクト
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
 | `--all` | `-a` | 停止中のコンテナも表示 |
-
-**表示内容**:
-- コンテナ名
-- 状態（Running/Stopped）
-- ポートマッピング
-- HEALTH 列（healthy/unhealthy/starting — healthcheck 定義がある場合）
-
-### `fleet status`
-
-設定ファイルのサービス定義と実際のDockerコンテナの状態を比較表示します。
-
-```bash
-fleet status <stage>
-fleet status local
-```
-
-**表示内容**:
-- 各サービスの状態（Running / Stopped / Missing）
-- 設定されているがコンテナが存在しないサービスを検出
-- カラー表示による視覚的な状態把握
-- サマリー（running/stopped/missing の件数）
+| `--global` | | CP 横断: 全プロジェクト・全ステージ |
+| `--project` | | CP 横断: プロジェクト名で絞り込み |
 
 ### `fleet logs`
 
 コンテナのログを表示します。
 
 ```bash
-fleet logs                       # 全サービス
-fleet logs -n <service>          # 特定サービス
-fleet logs -f                    # リアルタイム表示
-fleet logs --lines 100           # 行数指定
-fleet logs --since 5m            # 直近5分のログ
-fleet logs --since 1h -n web     # 直近1時間のwebサービスログ
-fleet logs -f -n web             # 組み合わせ
+fleet logs [stage]                # 全サービス
+fleet logs -s local -n app        # 特定サービス
+fleet logs -s local --follow      # リアルタイム追跡
+fleet logs -s local --lines 200   # 行数指定
+fleet logs -s local --since 5m    # 直近5分のログ
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
-| `--name` | `-n` | サービス名 |
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
+| `--service` | `-n` | サービス名（複数指定可） |
 | `--follow` | `-f` | リアルタイムで追従 |
-| `--lines` | | 表示する行数（デフォルト: 100） |
-| `--since` | | 指定期間内のログのみ表示（例: `5m`, `1h`, `30s`） |
-
-### `fleet start`
-
-停止中のサービスを起動します（コンテナは既に存在している場合）。
-
-```bash
-fleet start <stage>              # ステージ内の全サービス
-fleet start <stage> -n <service> # 特定サービスのみ
-fleet start local -n db
-```
-
-**オプション**:
-
-| オプション | 短縮 | 説明 |
-|-----------|------|------|
-| `-n` | | サービス名 |
-
-**動作**:
-- `docker start` 相当
-- コンテナが存在しない場合はエラー
-
-### `fleet stop`
-
-サービスを停止します（コンテナは保持）。
-
-```bash
-fleet stop <stage>              # ステージ内の全サービス
-fleet stop <stage> -n <service> # 特定サービスのみ
-fleet stop local -n db
-```
-
-**オプション**:
-
-| オプション | 短縮 | 説明 |
-|-----------|------|------|
-| `-n` | | サービス名 |
-
-**動作**:
-- `docker stop` 相当
-- コンテナは削除されない
-- `start` で再起動可能
-
-### `fleet restart`
-
-サービスを再起動します。
-
-```bash
-fleet restart <stage>              # ステージ内の全サービス
-fleet restart <stage> -n <service> # 特定サービスのみ
-fleet restart local -n web
-```
-
-**オプション**:
-
-| オプション | 短縮 | 説明 |
-|-----------|------|------|
-| `-n` | | サービス名 |
-
-**動作**:
-- `docker restart` 相当
-- 停止 → 起動を実行
+| `--lines` | `-l` | 表示する行数（デフォルト: 100） |
+| `--since` | | 指定時間以降のログ（例: 5m, 1h, 30s） |
 
 ### `fleet exec`
 
-サービスコンテナ内でコマンドを実行します。
+コンテナ内でコマンドを実行します。
 
 ```bash
-fleet exec <stage> -n <service> -- <command...>
-fleet exec prod -n surrealdb -- surreal sql --endpoint http://localhost:8000
-fleet exec prod -n caddy -- caddy reload
-fleet exec prod -n creo-app-server -- ls /app
-fleet exec prod -n surrealdb            # コマンド省略 → /bin/sh（インタラクティブ）
-fleet exec prod -n app -i -- top        # インタラクティブモード
-fleet exec prod -n app -i -t -- bash    # TTY付きインタラクティブモード
+fleet exec -n app -- npm run migrate
+fleet exec -s local -n app -it -- /bin/bash
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
 | `--service` | `-n` | サービス名（必須） |
-| `--interactive` | `-i` | stdin をアタッチ（インタラクティブモード） |
-| `--tty` | `-t` | 疑似TTYを割り当て |
-| `[COMMAND]...` | | `--` 以降に実行するコマンドを指定。省略時は `/bin/sh`（自動で `-i -t` が有効） |
-
-**動作**:
-- `docker exec` 相当
-- FleetFlowの命名規則（`{project}-{stage}-{service}`）でコンテナ名を自動解決
-- シェルコマンド（sh/bash）実行時は自動で `-i -t` を有効化
-- stdout/stderrをリアルタイムで出力
-- コマンドの終了コードをそのまま返す
+| `--interactive` | `-i` | stdin を接続 |
+| `--tty` | `-t` | 擬似 TTY を割り当て |
 
 ### `fleet build`
 
 イメージをビルドします（コンテナは起動しない）。
 
 ```bash
-fleet build <stage>                   # ステージ内の全サービス
-fleet build <stage> -n <service>      # 特定サービスのみ
-fleet build local -n api
-fleet build local -n api -n worker    # 複数サービスを同時ビルド
-fleet build local --no-cache          # キャッシュなしでビルド
-
-# レジストリにプッシュ
-fleet build local -n api --push
-fleet build local -n api --push --tag v1.0.0
-
-# クロスビルド
-fleet build live -n api --push --platform linux/amd64
+fleet build [stage]                              # ステージ内の全サービス
+fleet build -s local -n api                      # 特定サービスのみ
+fleet build -s local -n api --push               # ビルド + レジストリにプッシュ
+fleet build -s local -n api --push --tag v1.0.0  # タグ指定
+fleet build -s local --platform linux/amd64      # クロスビルド
 ```
 
 **オプション**:
 
 | オプション | 短縮 | 説明 |
 |-----------|------|------|
-| `-n` | | サービス名（複数指定可、`-n` を繰り返す） |
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
+| `--service` | `-n` | サービス名（複数指定可） |
 | `--no-cache` | | キャッシュを使わずにビルド |
 | `--push` | | ビルド後にレジストリへプッシュ |
 | `--tag` | | イメージタグを指定（`--push`と併用） |
+| `--registry` | | レジストリURL（例: ghcr.io/owner） |
 | `--platform` | | ターゲットプラットフォーム（クロスビルド用） |
 
-**プッシュ時の認証**:
+### `fleet deploy`
 
-Docker標準の認証方式を使用：
-- `~/.docker/config.json` から認証情報を取得
-- credential helper（osxkeychain, desktop）も自動対応
-- 環境変数 `DOCKER_CONFIG` でパスをカスタマイズ可能
-
-**タグ解決の優先順位**:
-1. `--tag` CLIオプション
-2. KDL設定の `image` フィールドのタグ
-3. デフォルト: `latest`
-
-### `fleet validate`
-
-設定ファイルの構文チェックを行います。
+CI/CDパイプラインからの自動デプロイに最適化されたコマンドです。
 
 ```bash
-fleet validate
+fleet deploy [stage] --yes
+fleet deploy -s live --yes              # 確認なしでデプロイ
+fleet deploy -s live --no-pull --yes    # pullをスキップ
+fleet deploy -s live --dry-run          # 実行せず計画のみ
 ```
-
-**チェック内容**:
-- KDL構文エラー
-- 必須フィールドの欠落（image等）
-- 論理的な矛盾
-
-### `fleet play`
-
-Playbookを実行します。リモートサーバーでのサービス起動などに使用します。
-
-```bash
-fleet play <playbook>
-fleet play deploy-live.kdl
-```
-
-### `fleet registry`
-
-Fleet Registryを管理します。複数のFleetFlowプロジェクトとサーバーを統合管理し、SSHリモートデプロイを実行できます。
-
-```bash
-# 全fleet・サーバーの一覧
-fleet registry list
-
-# 各fleet × serverの稼働状態
-fleet registry status
-
-# SSHリモートデプロイ
-fleet registry deploy <fleet> --yes
-fleet registry deploy api --yes
-fleet registry deploy api -s live --yes  # ステージ指定
-```
-
-**サブコマンド**:
-
-| サブコマンド | 説明 |
-|-------------|------|
-| `list` | 全fleetとサーバーの一覧を表示 |
-| `status` | 各fleet × serverの稼働状態を表示 |
-| `deploy <fleet>` | SSHリモートデプロイを実行 |
-
-**deployオプション**:
-
-| オプション | 短縮 | 説明 |
-|-----------|------|------|
-| `--yes` | `-y` | 確認なしで実行 |
-| `--stage` | `-s` | デプロイ対象のステージ |
-
-**動作**:
-1. `fleet-registry.kdl` からルートを解決
-2. SSH接続先とデプロイパスを取得
-3. リモートサーバーで `fleet deploy` を実行
-4. リアルタイムで出力を表示
-
-### `fleet stage`
-
-ステージを統合管理します（インフラ＋コンテナを一括操作）。
-
-```bash
-fleet stage up dev --yes       # ステージを起動
-fleet stage down dev           # ステージを停止
-fleet stage status dev         # 状態を確認
-fleet stage ps                 # コンテナ一覧
-fleet stage logs dev -f        # ログ表示
-```
-
-**サブコマンド**:
-
-| サブコマンド | 説明 |
-|-------------|------|
-| `up <stage> --yes` | ステージを起動（インフラ＋コンテナ、`--yes`必須） |
-| `down <stage>` | ステージを停止 |
-| `status <stage>` | ステージの状態を表示 |
-| `ps [stage]` | コンテナ一覧 |
-| `logs <stage>` | ログ表示 |
-
-### `fleet cloud`
-
-クラウドインフラを管理します。
-
-```bash
-# クラウド環境を構築
-fleet cloud up <stage>
-fleet cloud up dev --yes  # 確認をスキップ
-
-# クラウド環境を削除
-fleet cloud down <stage>
-fleet cloud down dev --yes
-
-# サーバー操作
-fleet cloud server list
-fleet cloud server create --name my-server
-fleet cloud server delete --name my-server --yes
-fleet cloud server start --name my-server
-fleet cloud server stop --name my-server
-
-# 認証確認
-fleet cloud auth
-```
-
-**サブコマンド**:
-
-| サブコマンド | 説明 |
-|-------------|------|
-| `up` | クラウド環境を構築（サーバー作成 + DNS設定） |
-| `down` | クラウド環境を削除（サーバー削除 + DNS削除） |
-| `server list` | サーバー一覧 |
-| `server create` | サーバー作成 |
-| `server delete` | サーバー削除 |
-| `server start` | サーバー起動 |
-| `server stop` | サーバー停止 |
-| `auth` | 認証状態を確認 |
 
 **オプション**:
 
-| オプション | 説明 |
-|-----------|------|
-| `--yes` | 確認をスキップ |
-| `--name` | サーバー名 |
+| オプション | 短縮 | 説明 |
+|-----------|------|------|
+| `[stage]` | | 位置引数でステージ名を指定 |
+| `--stage` | `-s` | フラグでステージ名を指定 |
+| `--service` | `-n` | サービス名（複数指定可） |
+| `--yes` | `-y` | 確認なしで実行（CI向け） |
+| `--no-pull` | | イメージのpullをスキップ |
+| `--no-prune` | | 不要イメージの削除をスキップ |
+| `--dry-run` | | 実行せず計画のみ表示 |
 
-**DNS自動管理**:
+### `fleet cp`
 
-環境変数が設定されている場合、`cloud up`/`cloud down`時にDNSレコードを自動管理：
+Control Plane 管理のサブコマンド群。
 
-| 環境変数 | 説明 |
-|---------|------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare APIトークン |
-| `CLOUDFLARE_ZONE_ID` | ドメインのZone ID |
-| `CLOUDFLARE_DOMAIN` | 管理対象ドメイン |
+```bash
+fleet cp login [--endpoint URL]    # Auth0 Device Flow でログイン
+fleet cp logout                    # ログアウト
+fleet cp auth                      # 認証状態を表示
+
+fleet cp daemon start/stop/status  # デーモン管理
+
+fleet cp tenant list/create/status # テナント管理
+fleet cp project list/create/show  # プロジェクト管理
+fleet cp server list/register/status/check/ping  # サーバー管理
+
+fleet cp cost list --month 2026-03         # 月次コスト一覧
+fleet cp cost summary --month 2026-03      # コスト集計
+
+fleet cp dns list/create/delete/sync       # DNS 管理
+
+fleet cp remote deploy --project X --stage live --server Y --command "..."
+fleet cp remote history                    # デプロイ履歴
+
+fleet cp registry list/status/sync/deploy  # Fleet Registry 管理
+```
 
 ### `fleet mcp`
 
@@ -489,22 +266,13 @@ FleetFlow自体を最新バージョンに更新します。
 fleet self-update
 ```
 
-### `fleet version`
-
-バージョン情報を表示します。
-
-```bash
-fleet version
-# 出力: fleetflow 0.9.1
-```
-
 ## 終了コード
 
 | コード | 説明 |
 |--------|------|
 | 0 | 成功 |
 | 1 | 一般エラー |
-| 2 | `--yes` 未指定（deploy, stage up 等で確認が必要な場合） |
+| 2 | 設定エラー |
 
 ## トラブルシューティング
 
@@ -515,9 +283,9 @@ fleet version
 ```
 
 **解決方法**:
-1. カレントディレクトリに`flow.kdl`があるか確認
+1. カレントディレクトリに`fleet.kdl`があるか確認
 2. 環境変数`FLEETFLOW_CONFIG_PATH`を確認
-3. `fleet validate`で検証
+3. `fleet up --dry-run`で設定を検証
 
 ### イメージが見つからない
 
@@ -539,21 +307,17 @@ fleet version
 **解決方法**:
 1. 他のコンテナを確認: `docker ps`
 2. ホストのプロセスを確認: `lsof -i :xxxx`
-3. flow.kdlで別のポート番号を指定
+3. fleet.kdlで別のポート番号を指定
 
 ### コンテナが起動しない
 
 **解決方法**:
-1. ログを確認: `fleet logs` または `docker logs {container}`
+1. ログを確認: `fleet logs -s <stage>` または `docker logs {container}`
 2. 環境変数が正しいか確認
 3. ボリュームマウントのパスを確認
 4. コマンドが正しいか確認
 
 ### ビルドが失敗する
-
-```
-エラー: ビルドに失敗しました
-```
 
 **解決方法**:
 1. Dockerfileのパスが正しいか確認
@@ -563,15 +327,7 @@ fleet version
 
 ### プッシュが失敗する
 
-```
-エラー: プッシュに失敗しました
-```
-
 **解決方法**:
 1. レジストリへのログインを確認: `docker login <registry>`
 2. `~/.docker/config.json` に認証情報があるか確認
 3. 認証情報の有効期限を確認（特にGHCR、ECRなど）
-4. イメージ名がレジストリの形式に合っているか確認:
-   - GHCR: `ghcr.io/owner/image:tag`
-   - Docker Hub: `username/image:tag`
-   - ECR: `123456789.dkr.ecr.region.amazonaws.com/image:tag`
