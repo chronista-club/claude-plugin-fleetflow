@@ -13,5 +13,7 @@
     "orchestration",
     "kdl",
     "devtools"
-  ]
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/chronista-club/claude-plugin-fleetflow"
 }
